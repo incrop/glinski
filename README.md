@@ -1,0 +1,2 @@
+# Gliński's hexagonal chess
+
