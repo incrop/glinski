@@ -1,5 +1,9 @@
-export type Piece = 'pawn' | 'knight' | 'bishop' | 'rook' | 'queen' | 'king' 
+export type PieceType = 'pawn' | 'knight' | 'bishop' | 'rook' | 'queen' | 'king' 
 export type PieceColor = 'black' | 'white'
+export type Piece = {
+  color: PieceColor,
+  type: PieceType,
+}
 export type CellColor = 'dark' | 'light' | 'mid'
 
 export type Cell = {

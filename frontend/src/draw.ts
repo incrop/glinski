@@ -1,4 +1,5 @@
-import { CellColor, Field } from "./models";
+import { CellColor, Field, PieceType, PieceColor } from "./models";
+import { shapeScale, shapes } from "./shapes";
 
 const padding = 10
 const outlineWidth = 4
@@ -40,11 +41,9 @@ export const drawField = (ctx: CanvasRenderingContext2D, field: Field) => {
   const heightBase = 11 * c * 2
   const widthBase = 11 * (a + b) + b
   const maxSize = ctx.canvas.clientHeight - padding * 2
-  const m = Math.floor(maxSize / heightBase) || (maxSize / heightBase)
+  const m = maxSize / heightBase // Math.floor(maxSize / heightBase)
   const offsetX = padding + Math.floor((maxSize - m * widthBase) / 2)
-  const offsetY = padding + maxSize - Math.ceil((maxSize - m * heightBase) / 2);
-  const renderRuns = [true, false]
-
+  const offsetY = padding + maxSize - Math.ceil((maxSize - m * heightBase) / 2)
 
   ctx.fillStyle = outlineColorRGB
   field.forEach((file, fileIdx) => {
@@ -70,6 +69,7 @@ export const drawField = (ctx: CanvasRenderingContext2D, field: Field) => {
     const cellOffsetX = offsetX + m * fileIdx * (a + b)
     const fileOffsetY = offsetY - m * c * Math.abs(5 - fileIdx)
     file.forEach((cell, rankIdx) => {
+      ctx.resetTransform()
       const cellOffsetY = fileOffsetY - m * c * 2 * rankIdx
       ctx.fillStyle = cellColorRGB(cell.color)
       ctx.beginPath()
@@ -81,6 +81,28 @@ export const drawField = (ctx: CanvasRenderingContext2D, field: Field) => {
       ctx.lineTo(cellOffsetX + m * b, cellOffsetY - m * c * 2)
       ctx.lineTo(cellOffsetX, cellOffsetY - m * c)
       ctx.fill()
+
+      if (cell.piece) {
+        ctx.translate(cellOffsetX + m * (b + a / 2), cellOffsetY - m * c)
+        ctx.scale(shapeScale * m, -shapeScale * m)
+        drawPiece(ctx, cell.piece.color, cell.piece.type)
+      }
     })
   })
+}
+
+const drawPiece = (ctx: CanvasRenderingContext2D, color: PieceColor, piece: PieceType) => {
+  const fillStyles = ['#000', '#fff']
+  let fillStyleIdx = 0
+  shapes[color][piece].forEach((path: Path2D) => {
+      ctx.fillStyle = fillStyles[fillStyleIdx]
+      ctx.fill(path)
+      fillStyleIdx = (fillStyleIdx + 1) % fillStyles.length
+  })
+
+  // debug center:
+  // ctx.fillStyle = 'red'
+  // ctx.beginPath()
+  // ctx.arc(0, 0, 100, 0, 2 * Math.PI, false)
+  // ctx.fill()
 }
