@@ -1,4 +1,4 @@
-import { CellColor, Field, PieceType, PieceColor } from "./models";
+import { CellColor, PieceType, PieceColor, Board } from "./models";
 import { shapeScale, shapes } from "./shapes";
 
 const padding = 10
@@ -37,7 +37,7 @@ const a = 9
 const b = 4
 const c = 8
 
-export const drawField = (ctx: CanvasRenderingContext2D, field: Field) => {
+export const drawBoard = (ctx: CanvasRenderingContext2D, board: Board) => {
   const heightBase = 11 * c * 2
   const widthBase = 11 * (a + b) + b
   const maxSize = ctx.canvas.clientHeight - padding * 2
@@ -46,7 +46,7 @@ export const drawField = (ctx: CanvasRenderingContext2D, field: Field) => {
   const offsetY = padding + maxSize - Math.ceil((maxSize - m * heightBase) / 2)
 
   ctx.fillStyle = outlineColorRGB
-  field.forEach((file, fileIdx) => {
+  board.forEach((file, fileIdx) => {
     const cellOffsetX = offsetX + m * fileIdx * (a + b)
     const fileOffsetY = offsetY - m * c * Math.abs(5 - fileIdx)
     file.forEach((_, rankIdx) => {
@@ -65,7 +65,7 @@ export const drawField = (ctx: CanvasRenderingContext2D, field: Field) => {
     })
   })
 
-  field.forEach((file, fileIdx) => {
+  board.forEach((file, fileIdx) => {
     const cellOffsetX = offsetX + m * fileIdx * (a + b)
     const fileOffsetY = offsetY - m * c * Math.abs(5 - fileIdx)
     file.forEach((cell, rankIdx) => {
@@ -85,7 +85,7 @@ export const drawField = (ctx: CanvasRenderingContext2D, field: Field) => {
       if (cell.piece) {
         ctx.translate(cellOffsetX + m * (b + a / 2), cellOffsetY - m * c)
         ctx.scale(shapeScale * m, -shapeScale * m)
-        drawPiece(ctx, cell.piece.color, cell.piece.type)
+        drawPiece(ctx, cell.piece.color, cell.piece.ptype)
       }
     })
   })

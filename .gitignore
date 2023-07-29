@@ -1,3 +1,4 @@
-node_modules/
+glinski-frontend/node_modules/
+glinski-frontend/assets/index.js
 
-frontend/assets/index.js
+glinski-backend/target/

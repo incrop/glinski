@@ -1,17 +1,36 @@
 export type PieceType = 'pawn' | 'knight' | 'bishop' | 'rook' | 'queen' | 'king' 
 export type PieceColor = 'black' | 'white'
-export type Piece = {
-  color: PieceColor,
-  type: PieceType,
-}
 export type CellColor = 'dark' | 'light' | 'mid'
 
-export type Cell = {
-  color: CellColor,
-  fileIdx: number,
-  rankIdx: number,
-  piece: Piece | undefined,
+export type Coords = {
+  file_idx: number,
+  rank_idx: number,
+}
+export type Piece = {
+  color: PieceColor,
+  ptype: PieceType,
 }
 
-export type Field = Cell[][]
+export type Cell = {
+  coords: Coords,
+  color: CellColor,
+  piece: Piece | null,
+}
 
+export type Board = Cell[][]
+
+export type Move = {
+  from: Coords,
+  to: Coords,
+}
+
+export type Game = {
+  player: PieceColor | null,
+  board: Board,
+  last_move: Move | null,
+}
+
+export type Message = {
+  type: 'GameState',
+  data: any,
+}
