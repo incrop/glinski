@@ -2,7 +2,7 @@ mod moves;
 
 use std::{sync::{OnceLock, RwLock, Arc, Mutex}, collections::HashMap, time::{UNIX_EPOCH, SystemTime}};
 
-use crate::models::{GlobalGame, PieceColor, Cell, Coords, CellColor, PieceType, Piece, Board, PlayerGame, GameSession, Moves};
+use crate::models::{GlobalGame, PieceColor, Cell, Coords, CellColor, PieceType, Piece, Board, PlayerGame, GameSession, Moves, Move};
 
 use self::moves::get_available_moves;
 
@@ -33,6 +33,10 @@ pub fn get_game(session_id: &str) -> PlayerGame {
     }
   });
   return session.get_player_game()
+}
+
+pub fn handle_move(session_id: &str, game_move: Move) {
+  
 }
 
 impl GameSession {

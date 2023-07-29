@@ -157,19 +157,3 @@ export const findCellByPixelCoords = (ctx: CanvasRenderingContext2D, x: number, 
     rank_idx,
   }
 }
-
-export const processCanvasClick = (ctx: CanvasRenderingContext2D, game: Game, x: number, y: number) => {
-  const coords = findCellByPixelCoords(ctx, x, y)
-  const selected = game.selected
-  delete game.selected
-  if (coords) {
-    if (!selected || selected.from.file_idx !== coords.file_idx || selected.from.rank_idx !== coords.rank_idx) {
-      const available_move = game.available_moves
-        .find(({from}) => from.file_idx === coords.file_idx && from.rank_idx === coords.rank_idx)
-      if (available_move) {
-        game.selected = available_move
-      }
-    }
-  }
-  drawBoard(ctx, game)
-}

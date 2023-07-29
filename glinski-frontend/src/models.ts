@@ -36,8 +36,3 @@ export type Game = {
   last_move: Move | null,
   selected?: Moves,
 }
-
-export type Message = {
-  type: 'GameState',
-  data: any,
-}

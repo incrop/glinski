@@ -12,7 +12,8 @@ use rouille::try_or_400;
 use rouille::websocket;
 use rouille::input;
 
-use crate::models::ServerMessage;
+use crate::models::Move;
+use crate::models::PlayerGame;
 
 
 fn main() {
@@ -55,15 +56,13 @@ fn websocket_handling_thread(mut websocket: websocket::Websocket) {
   let Some(websocket::Message::Text(session_id)) = websocket.next() else { panic!() };
   println!("Opened websocket for session {}", &session_id);
   let game = game::get_game(&session_id);
-  let game_state = ServerMessage::GameState {
-    data: game,
-  };
-  let text = &serde_json::to_string(&game_state).unwrap();
+  let text = &serde_json::to_string(&game).unwrap();
   websocket.send_text(text).unwrap();
   while let Some(message) = websocket.next() {
     match message {
       websocket::Message::Text(txt) => {
-        println!("received {:?} from a websocket", txt);
+        let game_move: Move = serde_json::from_str(&txt).unwrap();
+        game::handle_move(&session_id, game_move);
       }
       websocket::Message::Binary(_) => {
         println!("received binary from a websocket");

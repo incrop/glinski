@@ -70,12 +70,6 @@ pub struct PlayerGame {
   pub last_move: Option<Move>,
 }
 
-#[derive(Serialize, Deserialize)]
-#[serde(tag = "type")]
-pub enum ServerMessage {
-  GameState { data: PlayerGame },
-}
-
 pub struct GlobalGame {
   pub turn: PieceColor,
   pub sessions: [Option<String>; 2],
