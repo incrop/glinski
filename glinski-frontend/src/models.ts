@@ -24,10 +24,17 @@ export type Move = {
   to: Coords,
 }
 
+export type Moves = {
+  from: Coords,
+  to: Coords[],
+}
+
 export type Game = {
   player: PieceColor | null,
   board: Board,
+  available_moves: Moves[],
   last_move: Move | null,
+  selected?: Moves,
 }
 
 export type Message = {

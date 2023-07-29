@@ -1,6 +1,10 @@
+mod moves;
+
 use std::{sync::{OnceLock, RwLock, Arc, Mutex}, collections::HashMap, time::{UNIX_EPOCH, SystemTime}};
 
-use crate::models::{GlobalGame, PieceColor, Cell, Coords, CellColor, PieceType, Piece, Board, PlayerGame, GameSession};
+use crate::models::{GlobalGame, PieceColor, Cell, Coords, CellColor, PieceType, Piece, Board, PlayerGame, GameSession, Moves};
+
+use self::moves::get_available_moves;
 
 static ONE_GAME: OnceLock<Arc<Mutex<GlobalGame>>> = OnceLock::new();
 
@@ -34,12 +38,17 @@ pub fn get_game(session_id: &str) -> PlayerGame {
 impl GameSession {
   fn get_player_game(&self) -> PlayerGame {
     let game = self.game.lock().unwrap();
-
+    let board = get_player_board(&game.board, self.player.unwrap_or(PieceColor::White));
+    let last_move = game.history.last().copied();
+    let available_moves = match self.player {
+      None => vec![],
+      Some(player) => get_available_moves(&board, player, last_move),
+    };
     return PlayerGame { 
       player: self.player, 
-      board: get_player_board(&game.board, self.player.unwrap_or(PieceColor::White)), 
-      available_moves: vec![], 
-      last_move: None, 
+      board, 
+      available_moves,
+      last_move, 
     }
   }
 }
@@ -58,7 +67,8 @@ fn get_player_board(board: &Board, player: PieceColor) -> Board {
 fn pick_player(sessions: &mut [Option<String>; 2], session_id: &str) -> Option<PieceColor> {
   let init_sessions = sessions.iter().filter(|s| s.is_some()).count();
   let idx = match init_sessions {
-    0 => Some((SystemTime::now().duration_since(UNIX_EPOCH).unwrap().subsec_nanos() % 2) as usize),
+    0 => Some(0),
+    //TODO 0 => Some((SystemTime::now().duration_since(UNIX_EPOCH).unwrap().subsec_nanos() % 2) as usize),
     1 => Some(sessions.iter().position(|s| s.is_none()).unwrap()),
     _ => None,
   };

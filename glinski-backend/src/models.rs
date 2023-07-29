@@ -50,7 +50,7 @@ pub struct Cell {
 
 pub type Board = Vec<Vec<Cell>>;
 
-#[derive(Serialize, Deserialize)]
+#[derive(Copy, Clone, Serialize, Deserialize)]
 pub struct Move {
   pub from: Coords,
   pub to: Coords,
