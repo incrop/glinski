@@ -18,7 +18,12 @@ const onResize = () => {
 window.addEventListener('resize', onResize)
 onResize()
 
+const cookies = Object.fromEntries(document.cookie.split(";").map((pair) => pair.trim().split("=")))
+
 const socket = new WebSocket("ws://" + location.host + "/ws", "chess");
+socket.onopen = () => {
+  socket.send(cookies.SID)
+}
 socket.onmessage = (event) => {
   game = handleMessage(game, JSON.parse(event.data))
   drawBoard(ctx, game.board)

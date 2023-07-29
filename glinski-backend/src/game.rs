@@ -1,15 +1,79 @@
-use crate::models::{Game, PieceColor, Cell, Coords, CellColor, PieceType, Piece};
+use std::{sync::{OnceLock, RwLock, Arc, Mutex}, collections::HashMap, time::{UNIX_EPOCH, SystemTime}};
 
-pub fn get_game() -> Game {
-  Game {
-    player: Some(PieceColor::White),
-    board: new_board(),
-    last_move: None,
+use crate::models::{GlobalGame, PieceColor, Cell, Coords, CellColor, PieceType, Piece, Board, PlayerGame, GameSession};
+
+static ONE_GAME: OnceLock<Arc<Mutex<GlobalGame>>> = OnceLock::new();
+
+static SESSIONS: OnceLock<RwLock<HashMap<String, GameSession>>> = OnceLock::new();
+
+pub fn get_game(session_id: &str) -> PlayerGame {
+  let lock = SESSIONS.get_or_init(|| RwLock::new(HashMap::new()));
+  let mut sessions_map = lock.write().unwrap();
+  let session = sessions_map.entry(session_id.to_owned()).or_insert_with(|| {
+    let game = ONE_GAME.get_or_init(|| {
+      Arc::new(Mutex::new(
+        GlobalGame {
+          turn: PieceColor::White,
+          sessions: [None, None],
+          board: new_board(),
+          history: Vec::new(),
+        }
+      ))
+    });
+    GameSession {
+      player: {
+        let mut game = game.lock().unwrap();
+        pick_player(&mut game.sessions, session_id)
+      },
+      game: game.clone(),
+    }
+  });
+  return session.get_player_game()
+}
+
+impl GameSession {
+  fn get_player_game(&self) -> PlayerGame {
+    let game = self.game.lock().unwrap();
+
+    return PlayerGame { 
+      player: self.player, 
+      board: get_player_board(&game.board, self.player.unwrap_or(PieceColor::White)), 
+      available_moves: vec![], 
+      last_move: None, 
+    }
   }
 }
 
-fn new_board() -> Vec<Vec<Cell>> {
-  let mut board: Vec<Vec<Cell>> = (0..11).map(|file_idx| {
+fn get_player_board(board: &Board, player: PieceColor) -> Board {
+  (0..11).map(|file_idx| {
+    let file_len = 11 - (5i32 - file_idx).abs();
+    let orig_file_idx = if player == PieceColor::White { file_idx } else { 10 - file_idx };
+    (0..file_len).map(|rank_idx| {
+      let orig_rank_idx = if player == PieceColor::White { rank_idx } else { file_len - rank_idx - 1 };
+      board[orig_file_idx as usize][orig_rank_idx as usize]
+    }).collect()
+  }).collect()
+}
+
+fn pick_player(sessions: &mut [Option<String>; 2], session_id: &str) -> Option<PieceColor> {
+  let init_sessions = sessions.iter().filter(|s| s.is_some()).count();
+  let idx = match init_sessions {
+    0 => Some((SystemTime::now().duration_since(UNIX_EPOCH).unwrap().subsec_nanos() % 2) as usize),
+    1 => Some(sessions.iter().position(|s| s.is_none()).unwrap()),
+    _ => None,
+  };
+  idx.map(|idx| {
+    sessions[idx] = Some(session_id.to_owned());
+    if idx == 0 {
+      PieceColor::White
+    } else {
+      PieceColor::Black
+    }
+  })
+}
+
+fn new_board() -> Board {
+  let mut board: Board = (0..11).map(|file_idx| {
     let file_len = 11 - (5i32 - file_idx).abs();
     (0..file_len).map(|rank_idx| {
       let cell_color_idx = (file_idx + rank_idx + 0.max(file_idx - 5)) % 3;
