@@ -24,9 +24,88 @@ pub fn get_available_moves(board: &Board, player: PieceColor, last_move: Option<
   return moves;
 }
 
+const FLAT_DIRECTIONS: &'static [&'static [(Direction, i32)]] = &[
+  &[(Direction::LuodeKaakko, 1)],
+  &[(Direction::PohjoinenEtelä, 1)],
+  &[(Direction::KoillinenLounas, 1)],
+  &[(Direction::LuodeKaakko, -1)],
+  &[(Direction::PohjoinenEtelä, -1)],
+  &[(Direction::KoillinenLounas, -1)],
+];
+const DIAGONAL_DIRECTIONS: &'static [&'static [(Direction, i32)]] = &[
+  &[(Direction::LuodeKaakko, 1), (Direction::PohjoinenEtelä, 1)],
+  &[(Direction::PohjoinenEtelä, 1), (Direction::KoillinenLounas, 1)],
+  &[(Direction::KoillinenLounas, 1), (Direction::LuodeKaakko, -1)],
+  &[(Direction::LuodeKaakko, -1), (Direction::PohjoinenEtelä, -1)],
+  &[(Direction::PohjoinenEtelä, -1), (Direction::KoillinenLounas, -1)],
+  &[(Direction::KoillinenLounas, -1), (Direction::LuodeKaakko, 1)],
+];
+const KINGTH_DIRECTIONS: &'static [&'static [(Direction, i32)]] = &[
+  &[(Direction::LuodeKaakko, 2), (Direction::KoillinenLounas, -1)],
+  &[(Direction::LuodeKaakko, 2), (Direction::PohjoinenEtelä, 1)],
+  &[(Direction::PohjoinenEtelä, 2), (Direction::LuodeKaakko, 1)],
+  &[(Direction::PohjoinenEtelä, 2), (Direction::KoillinenLounas, 1)],
+  &[(Direction::KoillinenLounas, 2), (Direction::PohjoinenEtelä, 1)],
+  &[(Direction::KoillinenLounas, 2), (Direction::LuodeKaakko, -1)],
+  &[(Direction::LuodeKaakko, -2), (Direction::KoillinenLounas, 1)],
+  &[(Direction::LuodeKaakko, -2), (Direction::PohjoinenEtelä, -1)],
+  &[(Direction::PohjoinenEtelä, -2), (Direction::LuodeKaakko, -1)],
+  &[(Direction::PohjoinenEtelä, -2), (Direction::KoillinenLounas, -1)],
+  &[(Direction::KoillinenLounas, -2), (Direction::PohjoinenEtelä, -1)],
+  &[(Direction::KoillinenLounas, -2), (Direction::LuodeKaakko, 1)],
+];
+
 fn get_available_moves_for_piece(board: &Board, piece: Piece, coords: Coords) -> Vec<Coords> {
   let mut dest = Vec::new();
+  let add_direction_line = |steps: &&[(Direction, i32)]| {
+    let mut curr = coords.apply_steps(steps);
+    while let Some(cell) = curr.get_cell(&board) {
+      if cell.is_empty() {
+        dest.push(cell.coords);
+      } else if cell.is_attackable_by(piece.color) {
+        dest.push(cell.coords);
+        break;
+      } else {
+        break;
+      }
+      curr = curr.apply_steps(steps);
+    }
+  };
   match piece.ptype {
+    PieceType::Rook => {
+      FLAT_DIRECTIONS.iter()
+        .for_each(add_direction_line);
+    },
+    PieceType::Bishop => {
+      DIAGONAL_DIRECTIONS.iter()
+        .for_each(add_direction_line);
+    },
+    PieceType::Queen => {
+      FLAT_DIRECTIONS.iter().chain(DIAGONAL_DIRECTIONS.iter())
+        .for_each(add_direction_line);
+    },
+    PieceType::King => {
+      FLAT_DIRECTIONS.iter().chain(DIAGONAL_DIRECTIONS.iter())
+        .for_each(|steps: &&[(Direction, i32)]| {
+          let coords = coords.apply_steps(steps);
+          if let Some(cell) = coords.get_cell(&board) {
+            if cell.is_empty() || cell.is_attackable_by(piece.color) {
+              dest.push(cell.coords);
+            }
+          }
+        });
+    },
+    PieceType::Knight => {
+      KINGTH_DIRECTIONS.iter()
+        .for_each(|steps: &&[(Direction, i32)]| {
+          let coords = coords.apply_steps(steps);
+          if let Some(cell) = coords.get_cell(&board) {
+            if cell.is_empty() || cell.is_attackable_by(piece.color) {
+              dest.push(cell.coords);
+            }
+          }
+        });
+    },
     PieceType::Pawn => {
       if let Some(cell) = coords.offset(Direction::PohjoinenEtelä, 1).get_cell(&board) {
         if cell.is_empty() {
@@ -45,8 +124,7 @@ fn get_available_moves_for_piece(board: &Board, piece: Piece, coords: Coords) ->
         .filter_map(|coords| coords.get_cell(board))
         .filter(|cell| cell.is_attackable_by(piece.color))
         .for_each(|cell| dest.push(cell.coords))
-    }
-    _ => {}
+    },
   }
   return dest;
 }
@@ -64,6 +142,7 @@ impl GlobalGame {
   }
 }
 
+#[derive(Copy, Clone)]
 enum Direction {
   LuodeKaakko,
   PohjoinenEtelä,
@@ -71,6 +150,12 @@ enum Direction {
 }
 
 impl Coords {
+  #[inline]
+  fn apply_steps(&self, steps: &[(Direction, i32)]) -> Coords {
+    steps.iter().fold(*self, |c, (dir, dist)| 
+      c.offset(*dir, *dist)
+    )
+  }
   fn offset(&self, direction: Direction, distance: i32) -> Coords {
     if distance == 0 {
       return *self;
