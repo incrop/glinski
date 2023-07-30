@@ -32,7 +32,7 @@ const UID = localStorage.getItem("UID") || (() => {
   return res;
 })()
 
-const socket = new WebSocket("ws://" + location.host + "/ws", "chess");
+const socket = new WebSocket("ws://" + location.host + "/ws");
 socket.onopen = () => {
   socket.send(UID)
 }

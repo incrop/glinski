@@ -4,7 +4,9 @@ import { shapeScale, shapes } from "./shapes";
 const padding = 10
 const outlineWidth = 4
 const outlineColorRGB = '#000000'
-const selectedCellOverlayRGBA = 'rgba(0, 255, 0, 0.2)'
+const selectedCellOverlayRGBA = 'rgba(0, 64, 0, 0.5)'
+const lastMoveFromRGBA = 'rgba(0, 255, 0, 0.2)'
+const lastMoveToRGBA = 'rgba(0, 255, 0, 0.15)'
 
 const cellColorRGB = (cellColor: CellColor): string => 
   ({
@@ -82,9 +84,21 @@ export const drawBoard = (ctx: CanvasRenderingContext2D, game: Game) => {
       ctx.lineTo(cellOffsetX, cellOffsetY - m * c)
       ctx.fillStyle = cellColorRGB(cell.color)
       ctx.fill()
-      if (game.selected?.from?.file_idx == fileIdx && game.selected?.from?.rank_idx == rankIdx) {
-        ctx.fillStyle = selectedCellOverlayRGBA
-        ctx.fill()
+      if (game.selected) {
+        const {from} = game.selected
+        if (from.file_idx == fileIdx && from.rank_idx == rankIdx) {
+          ctx.fillStyle = selectedCellOverlayRGBA
+          ctx.fill()
+        }
+      } else if (game.last_move) {
+        const {from, to} = game.last_move
+        if (from.file_idx == fileIdx && from.rank_idx == rankIdx) {
+          ctx.fillStyle = lastMoveFromRGBA
+          ctx.fill()
+        } else if (to.file_idx == fileIdx && to.rank_idx == rankIdx) {
+          ctx.fillStyle = lastMoveToRGBA
+          ctx.fill()
+        }
       }
     })
   })
@@ -101,10 +115,31 @@ export const drawBoard = (ctx: CanvasRenderingContext2D, game: Game) => {
         ctx.resetTransform()
       }
       if (game.selected?.to?.some(({file_idx, rank_idx}) => file_idx == fileIdx && rank_idx == rankIdx)) {
-        ctx.beginPath()
-        ctx.arc(cellOffsetX + m * (b + a / 2), cellOffsetY - m * c, 3 * m, 0, 2 * Math.PI, false)
-        ctx.fillStyle = selectedCellOverlayRGBA
-        ctx.fill()
+        if (!cell.piece) {
+          ctx.beginPath()
+          ctx.arc(cellOffsetX + m * (b + a / 2), cellOffsetY - m * c, 3 * m, 0, 2 * Math.PI, false)
+          ctx.fillStyle = selectedCellOverlayRGBA
+          ctx.fill()
+        } else {
+          ctx.beginPath()
+          ctx.moveTo(cellOffsetX, cellOffsetY - m * c)
+          ctx.lineTo(cellOffsetX + m * b, cellOffsetY)
+          ctx.lineTo(cellOffsetX + m * (b + a), cellOffsetY)
+          ctx.lineTo(cellOffsetX + m * (b * 2 + a), cellOffsetY - m * c)
+          ctx.lineTo(cellOffsetX + m * (b + a), cellOffsetY - m * c * 2)
+          ctx.lineTo(cellOffsetX + m * b, cellOffsetY - m * c * 2)
+          ctx.lineTo(cellOffsetX, cellOffsetY - m * c)
+          ctx.lineTo(cellOffsetX, cellOffsetY - m * c)
+          ctx.moveTo(cellOffsetX + m * b / 2, cellOffsetY - m * c / 2)
+          ctx.lineTo(cellOffsetX + m * b / 2, cellOffsetY - m * c * 3 / 2)
+          ctx.lineTo(cellOffsetX + m * (b + a / 2), cellOffsetY - m * c * 2)
+          ctx.lineTo(cellOffsetX + m * (a + b * 3 / 2), cellOffsetY - m * c * 3 / 2)
+          ctx.lineTo(cellOffsetX + m * (a + b * 3 / 2), cellOffsetY - m * c / 2)
+          ctx.lineTo(cellOffsetX + m * (b + a / 2), cellOffsetY)
+          ctx.lineTo(cellOffsetX + m * b / 2, cellOffsetY - m * c / 2)
+          ctx.fillStyle = selectedCellOverlayRGBA
+          ctx.fill()
+        }
       }
     })
   })

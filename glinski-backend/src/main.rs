@@ -32,7 +32,7 @@ async fn main() {
       ws.on_upgrade(move |socket| handle_connection(socket))
     });
   warp::serve(serve_websocket.or(serve_static))
-        .run(([127, 0, 0, 1], 8080))
+        .run(([0, 0, 0, 0], 8080))
         .await;
 }
 
