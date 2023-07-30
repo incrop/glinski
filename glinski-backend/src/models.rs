@@ -14,7 +14,7 @@ pub enum PieceType {
   King,
 }
 
-#[derive(Copy, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Copy, Clone, Debug, Serialize, Deserialize, PartialEq)]
 #[serde(rename_all = "lowercase")] 
 pub enum PieceColor {
   Black,
@@ -29,7 +29,7 @@ pub enum CellColor {
   Mid,
 }
 
-#[derive(Copy, Clone, Serialize, Deserialize)]
+#[derive(Copy, Clone, Debug, Serialize, Deserialize)]
 pub struct Coords {
   pub file_idx: usize,
   pub rank_idx: usize,
@@ -71,7 +71,6 @@ pub struct PlayerGame {
 }
 
 pub struct GlobalGame {
-  pub turn: PieceColor,
   pub sessions: [Option<String>; 2],
   pub board: Board,
   pub history: Vec<Move>,
